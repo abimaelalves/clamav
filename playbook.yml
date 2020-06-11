@@ -1,0 +1,6 @@
+---
+- name: Playbook antivirus
+  hosts: all
+  roles:
+    - antivirus
+...

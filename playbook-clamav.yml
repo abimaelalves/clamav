@@ -1,0 +1,32 @@
+- name: Playbook instalação e configuração do antivirus CLAMAV
+  hosts: teste
+  
+  remote_user: root
+  vars:
+    password: "{{ ansible_ssh_pass }}"   # Irá buscar a variavel da senha no arquivo teste dentro do diretorio group_vars
+
+  tasks:
+    - name: Instalacao do antivirus - CLAMAV
+      yum: name=clamav state=latest
+
+    - name: Criando um diretório para armazenar os logs dos escaneamentos diários.
+      file:
+        path: /var/log/clamav
+        state: directory
+        mode: '0755'
+
+    - name: Copiando script que será responsável por fazer a atualização da base de vírus
+      copy: src=files/scripts/daily-clamscan.sh dest=/etc/clamd.d/daily-clamscan.sh  owner=root group=root mode=0755
+
+    - name: Definindo cron para rodar o script de antivirus
+      cron:
+        name: ClamAV SCAN
+        user: root
+        minute: "0"
+        hour: "4"
+        day: "*"            # day month
+        month: "*"          # month 
+        weekday: "0"        # day week
+        job: "/etc/clamd.d/daily-clamscan.sh &> /etc/clamd.d/last-clamscan.log"
+        state: present
+...

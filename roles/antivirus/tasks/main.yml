@@ -1,0 +1,27 @@
+---
+- name: Instalacao do antivirus - CLAMAV
+  yum: name=clamav state=latest
+  when: ansible_distribution == 'CentOS' or ansible_distribution == 'RedHat'
+
+- name: Crie um diretório para armazenar os logs dos escaneamentos diários.
+  file:
+    path: /var/log/clamav
+    state: directory
+    mode: '0755'
+
+- name: Copiando script que será responsável por fazer a atualização da base de vírus
+  copy: src=daily-clamscan.sh dest=/etc/clamd.d/daily-clamscan.sh  owner=root group=root mode=0755
+
+- name: Definindo cron para rodar o script de antivirus
+  cron:
+    name: ClamAV SCAN
+    user: root
+    minute: "0"
+    hour: "4"
+    day: "*"       # day month
+    month: "*"     # month 
+    weekday: "0"   # day week
+    job: "/etc/clamd.d/daily-clamscan.sh &> /etc/clamd.d/last-clamscan.log"
+    state: present
+...
+
